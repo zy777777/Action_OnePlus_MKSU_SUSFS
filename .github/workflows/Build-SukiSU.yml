@@ -5,7 +5,7 @@ on:
       CPU:
         description: "分支"
         required: true
-        default: '8750'
+        default: 'sm8750'
       FEIL:
         description: "配置文件"
         required: true
