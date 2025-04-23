@@ -1,3 +1,4 @@
+
 name: Build OnePlus_Kernel
 on:
   workflow_dispatch:
@@ -25,7 +26,7 @@ on:
       KERNEL_NAME:
         description: "修改内核名称"
         required: true
-        default: '-android15-8-o-g1132d864665d'
+        default: '-android14-8-o-g1132d864665d'
       kernelsu_variant:
         description: "选择 KSU"
         required: true
@@ -79,7 +80,7 @@ jobs:
       - name: Install dependencies
         run: |
          sudo apt update && sudo apt upgrade -y
-         sudo apt install -y python3 git curl wget
+         sudo apt install -y python3 git curl
 
       - name: Install repo tool
         run: |
@@ -117,6 +118,7 @@ jobs:
           echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
           export KSU_VERSION=$KSU_VERSION
           sed -i "s/DKSU_VERSION=12800/DKSU_VERSION=${KSU_VERSION}/" kernel/Makefile
+
       - name: Add SukiSU
         if: ${{ github.event.inputs.kernelsu_variant == 'SukiSU' }}
         run: |
@@ -157,9 +159,9 @@ jobs:
         if: ${{ github.event.inputs.SUSFS_ENABLED == 'true' }}
         run: |
           cd kernel_workspace/kernel_platform/common
-          cp ../../SukiSU_patch/69_hide_stuff.patch ./
-          echo "正在打隐藏应用补丁"
-          patch -p1 -F 3 < 69_hide_stuff.patch
+          #cp ../../SukiSU_patch/69_hide_stuff.patch ./
+          #echo "正在打隐藏应用补丁"
+          #patch -p1 -F 3 < 69_hide_stuff.patch
          
       - name: Apply New Hooks Patches
         if: ${{ github.event.inputs.VFS_patch_ENABLED == 'enable' }}
@@ -246,9 +248,13 @@ jobs:
            sed -i '$s|echo "\$res"|echo "\${{ github.event.inputs.KERNEL_NAME }}"|' ./common/scripts/setlocalversion
   
       - name: Build kernel
-        run: 
+        run: |
           cd kernel_workspace
-          LTO=thin ./kernel_platform/oplus/build/oplus_build_kernel.sh ${{ github.event.inputs.CPUD }} perf --action_env=KSU_VERSION
+          if [[ "${{ github.event.inputs.KERNEL_VERSION }}" == "6.1" || "${{ github.event.inputs.KERNEL_VERSION }}" == "6.6" ]]; then
+            LTO=thin ./kernel_platform/oplus/build/oplus_build_kernel.sh  ${{ github.event.inputs.CPUD }} perf --action_env=KSU_VERSION
+          else
+            LTO=thin ./kernel_platform/oplus/build/oplus_build_kernel.sh ${{ github.event.inputs.CPUD }} gki
+          fi
          
       - name: Make AnyKernel3
         run: |
@@ -285,7 +291,7 @@ jobs:
       - name: Apply patch_linux and replace Image
         if: ${{ github.event.inputs.kernelsu_variant == 'SukiSU-Ultra' }}
         run: |
-          cd kernel_workspace/kernel_platform/out/msm-kernel-${{ github.event.inputs.CPUD }}-perf /dist
+          cd kernel_workspace/kernel_platform/out/msm-kernel-${{ github.event.inputs.CPUD }}-perf/dist
           curl -LO https://github.com/ShirkNeko/SukiSU_KernelPatch_patch/releases/download/0.11-beta/patch_linux
           chmod +x patch_linux
           ./patch_linux
@@ -297,7 +303,7 @@ jobs:
       - name: Reproduction of documents
         if: ${{ github.event.inputs.kernelsu_variant == 'SukiSU' }}
         run: |
-          cd kernel_workspace/kernel_platform/out/msm-kernel-${{ github.event.inputs.CPUD }}-gki/dist
+          cd kernel_workspace/kernel_platform/out/msm-kernel-${{ github.event.inputs.CPUD }}-perf/dist
           cp Image $GITHUB_WORKSPACE/AnyKernel3/Image
           cp Image $GITHUB_WORKSPACE/kernel_workspace/kernel
          
