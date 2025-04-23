@@ -150,7 +150,7 @@ jobs:
           cd ./common
           patch -p1 < 50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch || true
           cd ./fs
-          curl -o ./namespace.c https://raw.githubusercontent.com/zy777777/Action_OnePlus_MKSU_SUSFS/refs/heads/main/.github/workflows/namespace.c
+          
           echo "完成"
           
       - name: Apply Hide Stuff Patches
@@ -246,7 +246,7 @@ jobs:
            sed -i '$s|echo "\$res"|echo "\${{ github.event.inputs.KERNEL_NAME }}"|' ./common/scripts/setlocalversion
   
       - name: Build kernel
-        run: |
+        run: 
           cd kernel_workspace
           if [[ "${{ github.event.inputs.KERNEL_VERSION }}" == "6.1" || "${{ github.event.inputs.KERNEL_VERSION }}" == "6.6" ]]; then
             LTO=thin ./kernel_platform/oplus/build/oplus_build_kernel.sh ${{ github.event.inputs.CPUD }} perf --action_env=KSU_VERSION
